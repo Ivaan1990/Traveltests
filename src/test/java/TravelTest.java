@@ -23,8 +23,9 @@ public class TravelTest extends BaseTest {
         findElementAndClick("//*[contains(@class, 'thumbnail-footer')]/a[contains(text(),'Рассчитать')]");
 
         scrollPage("//div[@class='page-header']/span [@class ='h1']");
-        /* Поиск нужного текста */
-        Assert.assertEquals(
+
+        /* Поиск и сравнение с требуемым текстом */
+        compareText(
                 "Страхование выезжающих за рубеж",
                 drv.findElement(By.xpath("//div[@class='page-header']/span [@class ='h1']")).getText().trim()
         );
@@ -66,7 +67,6 @@ public class TravelTest extends BaseTest {
         findElementAndClick("//*[contains(@data-bind, 'disable: Misc.NextButtonDisabled')]");
     }
 
-
     /**
      *
      * Скроллер страницы
@@ -101,11 +101,7 @@ public class TravelTest extends BaseTest {
      * @param text первый параметр текст который хотим найти
      * @param line второй который извлечён из страницы drv.findElement
      */
-    private void findText1(String text, String line) {
-        if (text.equalsIgnoreCase(line)){
-            System.out.println("Заголовок соответствует требуемому");
-        } else {
-            System.out.println("Заголовок не соответствует заданному");
-        }
+    private void compareText(String text, String line) {
+        Assert.assertEquals("Текст не совпадает" ,text, line);
     }
 }
