@@ -75,7 +75,7 @@ public class TravelTest extends BaseTest {
      *
      * Скроллер страницы
      */
-    public void scrollPage(String xPath){
+    private void scrollPage(String xPath){
         ((JavascriptExecutor)drv).executeScript("arguments[0].scrollIntoView();", drv.findElement(By.xpath(xPath)));
     }
 
@@ -84,7 +84,7 @@ public class TravelTest extends BaseTest {
      * @param locator локатор элемента
      * @param fill текст который заполняем в форму
      */
-    public void fillForm(By locator, String fill){
+    private void fillForm(By locator, String fill){
         drv.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         drv.findElement(locator).click();
         drv.findElement(locator).clear();
