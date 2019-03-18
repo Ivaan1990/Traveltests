@@ -10,6 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  *
+ * @author Ivan Yushin
+ * @see #fillForm(By, String)
+ * @see #findElementAndClick(String)
+ * @see #scrollPage(String)
  */
 public class TravelTest extends BaseTest {
 
@@ -77,7 +81,7 @@ public class TravelTest extends BaseTest {
 
     /**
      *
-     * @param locator
+     * @param locator локатор элемента
      * @param fill текст который заполняем в форму
      */
     public void fillForm(By locator, String fill){
