@@ -2,7 +2,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -11,9 +15,12 @@ import java.util.concurrent.TimeUnit;
 /**
  *
  * @author Ivan Yushin
+ *
  * @see #fillForm(By, String)
  * @see #findElementAndClick(String)
  * @see #scrollPage(String)
+ * @see #validationForm(String, String)
+ *
  */
 public class TravelTest extends BaseTest {
 
@@ -25,23 +32,23 @@ public class TravelTest extends BaseTest {
         scrollPage("//*[contains(@class, 'thumbnail-footer')]/a[contains(text(),'Рассчитать')]"); /* Скроллер */
         findElementAndClick("//*[text()=' ок ']");
         findElementAndClick("//*[contains(@class, 'thumbnail-footer')]/a[contains(text(),'Рассчитать')]");
-
-        scrollPage("//div[@class='page-header']/span [@class ='h1']");
-
-        /* Поиск и сравнение с требуемым текстом */
         compareText(
                 "Страхование выезжающих за рубеж",
                 drv.findElement(By.xpath("//div[@class='page-header']/span [@class ='h1']")).getText().trim()
         );
-        findElementAndClick("//*[contains(@class, 'btn-content-subtitle small')]");
+        Wait<WebDriver> wait = new WebDriverWait(drv, 10,1000);
+        wait.until(ExpectedConditions.visibilityOf(drv.findElement(By.xpath("//*[contains(@data-test-value, 'Multiple')]"))));
+        findElementAndClick("//*[contains(@data-test-value, 'Multiple')]");
+
+        scrollPage("//*[contains(@class, 'actual-input')]");
+        wait.until(ExpectedConditions.visibilityOf(drv.findElement(By.xpath("//*[contains(@class, 'actual-input')]"))));
+        fillForm(By.xpath("//*[contains(@data-bind, 'attr: _params.input,')]"), "шенген");  // вводим страну
 
         scrollPage("//*[contains(@class, 'btn-content-subtitle small')]");
-        fillForm(By.xpath("//*[contains(@class, 'actual-input')]"), "шенген");  // вводим страну
         findElementAndClick("//*[contains(@class, 'tt-menu tt')]");
         findElementAndClick("//*[contains(@ id, 'ArrivalCountryList')]");
         new Select(drv.findElement(By.name("ArrivalCountryList"))).selectByVisibleText("Испания");
         findElementAndClick("//*[contains(@data-bind, 'value: FirstDepartureDate.')]");
-
         Itravel dateOfJourney = () -> {
             LocalDate today = LocalDate.now();
             LocalDate date = today.plus(14, ChronoUnit.DAYS);
@@ -52,20 +59,41 @@ public class TravelTest extends BaseTest {
             }
             return builder.toString();
         };
-
-        fillForm(By.xpath("//*[contains(@data-bind, 'value: FirstDepartureDate.')]"), dateOfJourney.function()); // ДАТА ПОЕЗДКИ
+        String date = dateOfJourney.function();
+        drv.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
+        while (true){
+            fillForm(By.xpath("//*[contains(@data-bind, 'value: FirstDepartureDate.')]"), date); // ДАТА ПОЕЗДКИ
+            String val = drv.findElement(By.xpath("//*[contains(@data-bind, 'value: FirstDepartureDate.')]")).getAttribute("value");
+            if (validationForm(date, val)){
+                System.out.println("Дата поездки корректна");
+                break;
+            }
+            System.err.println("Дата поездки введена некорректно, пробуем еще раз");
+        }
         findElementAndClick("//*[contains(@data-bind, 'btnRadioGroupValue: 90')]");
 
         scrollPage("//*[contains(@class, 'form-control')][contains(@data-bind, 'attr: _params.fullName.attr,')]");
         String temp = "//*[contains(@class, 'form-control')][contains(@data-bind, 'attr: _params.fullName.attr,')]";
         findElementAndClick(temp);
         fillForm(By.xpath(temp), "Yushin Ivan"); // ФАМИЛИЯ ИМЯ
+
         temp = "//*[contains(@data-bind, 'value: BirthDay.computedView')]";
         findElementAndClick(temp);
         String birthDate = "01111990";
-        fillForm(By.xpath(temp), birthDate); // ДАТА РОЖДЕНИЯ
+        while (true){
+            fillForm(By.xpath(temp), birthDate); // ДАТА РОЖДЕНИЯ
+            String val = drv.findElement(By.xpath(temp)).getAttribute("value");
+            if(validationForm(birthDate, val)) {
+                System.out.println("Дата рождения введена корректно");
+                break;
+            }
+            System.err.println("Дата рождения введена не корректно, исправляем");
+        }
 
+        scrollPage("//*[contains(@data-test-name, 'IsProcessingPersonalDataToCalculate')]");
         findElementAndClick("//*[contains(text(), 'активный отдых или спорт')]/ancestor::div[@class=\"calc-vzr-toggle-risk-group\"]//div[@class=\"toggle off toggle-rgs\"]");
+        drv.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
+
         scrollPage("//*[contains(@data-test-name, 'IsProcessingPersonalDataToCalculate')]");
         findElementAndClick("//*[contains(@data-test-name, 'IsProcessingPersonalDataToCalculate')]");
         findElementAndClick("//*[contains(@data-bind, 'disable: Misc.NextButtonDisabled')]");
@@ -85,7 +113,6 @@ public class TravelTest extends BaseTest {
      * @param fill текст который заполняем в форму
      */
     private void fillForm(By locator, String fill){
-        drv.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         drv.findElement(locator).click();
         drv.findElement(locator).clear();
         drv.findElement(locator).sendKeys(fill);
@@ -107,5 +134,20 @@ public class TravelTest extends BaseTest {
      */
     private void compareText(String text, String line) {
         Assert.assertEquals("Текст не совпадает" ,text, line);
+    }
+
+    /**
+     *
+     * @param expect Строка которую ждем
+     * @param actual Строка которая записана в поле ввода
+     * @return true если строки совпадают
+     */
+    private boolean validationForm(String expect, String actual){
+        StringBuilder builder = new StringBuilder();
+        char[] arr = actual.toCharArray();
+        for(char symb : arr){
+            if (symb != '.' ) builder.append(symb);
+        }
+        return expect.equalsIgnoreCase(builder.toString());
     }
 }
