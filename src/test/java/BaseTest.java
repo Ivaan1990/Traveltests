@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class BaseTest {
-
     public WebDriver drv;
+
     @Before
     public void initTest(){
         System.out.println("Travel");

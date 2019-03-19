@@ -134,6 +134,9 @@ public class TravelTest extends BaseTest {
      */
     private void compareText(String text, String line) {
         Assert.assertEquals("Текст не совпадает" ,text, line);
+        if (text.equalsIgnoreCase(line)){
+            System.out.println("Заголовок соответствует требуемому");
+        }
     }
 
     /**
