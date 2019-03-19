@@ -133,6 +133,7 @@ public class TravelTest extends BaseTest {
      * @param line второй который извлечён из страницы drv.findElement
      */
     private void compareText(String text, String line) {
+
         Assert.assertEquals("Текст не совпадает" ,text, line);
         if (text.equalsIgnoreCase(line)){
             System.out.println("Заголовок соответствует требуемому");
